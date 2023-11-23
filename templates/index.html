@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+{% load humanize %}
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Product Page</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+    </head>
+    <body style="background-color: aliceblue;">
+        <section class="section">
+            <div class="container">
+                {% if messages %}
+                        {% for message in messages %}
+                            {% if message.tags == 'error' %}
+                                <div {% if message.tags %} class="notification is-danger" {% endif %}>
+                                    {{ message }}
+                                </div>
+                            {% else %}
+                                <div {% if message.tags %} class="notification is-{{ message.tags }}" {% endif %}>
+                                    {{ message }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                {% endif %}
+                <div class="buttons">
+                    <button class="button is-info modal-triger" data-target="getOnlineProduct">Get Online Product</button>
+                    <button class="button is-primary modal-create-triger" data-target="createNewProduct">Add Product</button>
+                </div>
+                <div class="columns is-multiline">
+                    {% for item in products %}
+                    <div class="column is-3">
+                        <div class="card">
+                            <div class="card-content">
+                                <p class="title is-size-6">
+                                    {{ item.name|safe }}
+                                </p>
+
+                                <p class="subtitle is-size-6">
+                                    Rp. {{ item.price|intcomma }}
+                                </p>
+
+                                <span class="tag">
+                                    {{ item.category.name }}
+                                </span>
+                            </div>
+                            <footer class="card-footer">
+                                <a href="#" class="card-footer-item has-background-warning-light modal-update-triger"
+                                    data-target="createNewProduct"
+                                    data-product_id="{{ item.id }}"
+                                    data-product_name="{{ item.name }}"
+                                    data-product_price="{{ item.price }}"
+                                    data-product_category_id="{{ item.category.id }}"
+                                    data-product_status_id="{{ item.status.id }}"
+                                >Edit</a>
+                                <a href="#" class="card-footer-item has-background-danger-light modal-delete-triger"
+                                    data-target="confirmDeleteModal"
+                                    data-product_id="{{ item.id }}"
+                                    data-product_name="{{ item.name }}"
+                                >Delete</a>
+                            </footer>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div id="getOnlineProduct" class="modal">
+                    <div class="modal-background"></div>
+                  
+                    <div class="modal-content">
+                      <div class="box">
+                        <form action="{% url 'get-online-products' %}" method="post">
+                            {% csrf_token %}
+                            <div class="field">
+                                <label class="label">Username</label>
+                                <div class="control">
+                                    {{rform.username}}
+                                </div>
+                                <div class="control pt-2">
+                                    <button class="button is-primary" type="submit">Submit</button>
+                                </div>
+                            </div>
+                        </form>
+                      </div>
+                    </div>
+                  
+                    <button class="modal-close is-large" aria-label="close"></button>
+                </div>
+
+                <div id="createNewProduct" class="modal">
+                    <div class="modal-background"></div>
+                    <div class="modal-content">
+                        <div class="box">
+                            <form action="{% url 'add-new-product' %}" method="post">
+                                {% csrf_token %}
+                                <div class="field">
+                                    <label class="label">{{ pform.name.label }}</label>
+                                    <div class="control">
+                                        {{pform.name}}
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label">{{ pform.price.label }}</label>
+                                    <div class="control">
+                                        {{pform.price}}
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label">{{ pform.category.label }}</label>
+                                    <div class="control">
+                                        {{pform.category}}
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label">{{ pform.status.label }}</label>
+                                    <div class="control">
+                                        {{pform.status}}
+                                    </div>
+                                </div>
+                                <button class="button is-primary">Save</button>
+                            </form>
+                        </div>
+                    </div>                    
+                </div>
+
+                <div id="confirmDeleteModal" class="modal">
+                    <div class="modal-background"></div>
+                  
+                    <div class="modal-content">
+                        <div class="box">
+                            <form action="" method="POST">
+                                {% csrf_token %}
+                                <p class="title is-size-6">Are you sure ??</p>
+                                <div class="buttons">
+                                    <button class="button is-danger" type="submit">Confirm</button>
+                                    <button class="button is-light" aria-label="close">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                  
+                    <button class="modal-close is-large" aria-label="close"></button>
+                </div>
+
+            </div>
+        </section>
+
+        <script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Functions to open and close a modal
+                function openModal($el) {
+                    $el.classList.add('is-active');
+                }
+
+                function closeModal($el) {
+                    $el.classList.remove('is-active');
+                }
+
+                function closeAllModals() {
+                    (document.querySelectorAll('.modal') || []).forEach(($modal) => {
+                    closeModal($modal);
+                    });
+                }
+
+                // Add a click event on buttons to open a specific modal
+                (document.querySelectorAll('.modal-triger') || []).forEach(($trigger) => {
+                    const modal = $trigger.dataset.target;
+                    const $target = document.getElementById(modal);
+
+                    $trigger.addEventListener('click', () => {
+                    openModal($target);
+                    });
+                });
+
+                // Add a click event on buttons to open a specific modal
+                (document.querySelectorAll('.modal-create-triger') || []).forEach(($trigger) => {
+                    const modal = $trigger.dataset.target;
+                    const $target = document.getElementById(modal);
+
+                    $trigger.addEventListener('click', () => {
+
+                        const formAdd = $target.querySelector(['form'])
+                        formAdd.action = '/new-products/'
+
+                        formAdd.reset()
+
+                    openModal($target);
+                    });
+                });
+
+                (document.querySelectorAll('.modal-update-triger') || []).forEach(($trigger) => {
+                    const modal = $trigger.dataset.target;
+                    const $target = document.getElementById(modal);
+
+                    $trigger.addEventListener('click', () => {
+
+                        // console.log($trigger.dataset);
+                        const id = $trigger.dataset.product_id
+                        const name = $trigger.dataset.product_name
+                        const price = $trigger.dataset.product_price
+                        const category_id = $trigger.dataset.product_category_id
+                        const status_id = $trigger.dataset.product_status_id
+
+                        const formEdit = $target.querySelector(['form'])
+                        
+                        const input_name = formEdit.querySelector('input[name="name"]')
+                        input_name.value = name
+
+                        const input_price = formEdit.querySelector('input[name="price"]')
+                        input_price.value = price
+
+                        const input_category = formEdit.querySelector('select[name="category"]')
+                        input_category.value = category_id
+                        
+                        const input_status = formEdit.querySelector('select[name="status"]')
+                        input_status.value = status_id
+
+                        formEdit.action = `/update-products/${id}/`
+
+                    openModal($target);
+                    });
+                });
+
+                (document.querySelectorAll('.modal-delete-triger') || []).forEach(($trigger) => {
+                    const modal = $trigger.dataset.target;
+                    const $target = document.getElementById(modal);
+
+                    $trigger.addEventListener('click', () => {
+
+                        // console.log($trigger.dataset);
+                        const id = $trigger.dataset.product_id
+                        const name = $trigger.dataset.product_name
+
+                        const formDelete = $target.querySelector(['form'])
+
+                        const ttext = formDelete.querySelector('p')
+                        ttext.textContent = `Delete product ${name}?`
+
+                        formDelete.action = `/delete-products/${id}/`
+
+
+                    openModal($target);
+                    });
+                });
+
+                // Add a click event on various child elements to close the parent modal
+                (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
+                    const $target = $close.closest('.modal');
+
+                    $close.addEventListener('click', () => {
+                    closeModal($target);
+                    });
+                });
+
+                // Add a keyboard event to close all modals
+                document.addEventListener('keydown', (event) => {
+                    if (event.code === 'Escape') {
+                    closeAllModals();
+                    }
+                });
+            });
+        </script>
+            
+        <script>
+        </script>
+    </body>
+</html>
