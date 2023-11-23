@@ -9,8 +9,8 @@ from testfp.settings import ONLINE_PRODUCTS_URL
 class ProductForm(forms.ModelForm):
     name = forms.CharField(label='Product Name', max_length=100, widget=forms.TextInput(attrs={'class': "input", "placeholder": "Product Name"}))    
     price = forms.CharField(label='Product Price', max_length=100, widget=forms.NumberInput(attrs={'class': "input", "placeholder": "Product Price"}))    
-    category = forms.ModelChoiceField(label='Product Category', queryset=None, widget=forms.Select(attrs={'class': 'input'}))
-    status = forms.ModelChoiceField(label='Product Status', queryset=None, widget=forms.Select(attrs={'class': 'input'}))
+    category = forms.ModelChoiceField(label='Product Category', queryset=Category.objects.all(), widget=forms.Select(attrs={'class': 'input'}))
+    status = forms.ModelChoiceField(label='Product Status', queryset=Status.objects.all(), widget=forms.Select(attrs={'class': 'input'}))
     
     class Meta:
         model = Product
@@ -20,15 +20,6 @@ class ProductForm(forms.ModelForm):
             'category',
             'status',
         ]
-
-    def __init__(self, *args, **kwargs):
-        super(ProductForm, self).__init__(*args, **kwargs)
-        
-        if Category.objects.exists():
-            self.fields['category'].queryset = Category.objects.all()
-
-        if Status.objects.exists():
-            self.fields['status'].queryset = Status.objects.all()
 
 
 class GetOnlineProductForm(forms.Form):

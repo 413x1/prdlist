@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'testfp.wsgi.application'
 DATABASES = {
 	'default': {
 		'ENGINE': 'django.db.backends.mysql',
-		'NAME': 'testfp',
+		'NAME': 'prdlist_db',
 		'USER': 'root',
 		'PASSWORD': '',
 		'HOST':'localhost',
